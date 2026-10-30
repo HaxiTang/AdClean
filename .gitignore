@@ -1,0 +1,6 @@
+# 构建脚本每次运行会重新释放这些文件
+dist/AdCleanGUI.ps1
+dist/custom-list.json
+dist/crash-log.txt
+# 设备冻结记录（含序列号，不入库）
+state/
