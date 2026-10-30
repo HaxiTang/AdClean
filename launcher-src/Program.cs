@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
 
 namespace AdClean
 {
-    // AdClean 启动器：内嵌 PowerShell 主程序，零依赖运行
-    // 任何异常都会写入 exe 同目录 crash-log.txt 并弹窗提示，绝不静默崩溃
+    // AdClean 启动器 v2：进程内托管 PowerShell 引擎
+    // 不再释放脚本文件、不再启动 powershell.exe 子进程
+    // （旧版"释放脚本 + 隐藏 powershell"的模式会被 360 等安全软件的行为防御静默拦截）
     internal static class Program
     {
         [STAThread]
@@ -42,41 +44,41 @@ namespace AdClean
 
         private static void Run(string root)
         {
-            // 释放目录：优先 exe 同目录（绿色软件习惯），失败退回 %TEMP%
-            string destDir = root;
-            string ps1Path = Path.Combine(destDir, "AdCleanGUI.ps1");
+            // 自定义清单模板（可选文件，不存在才释放）
             try
             {
-                string embedded = Encoding.UTF8.GetString(Resources.AdCleanGUI);
-                File.WriteAllText(ps1Path, embedded, Encoding.UTF8);
-
-                // 自定义清单模板（可选文件，不存在才释放）
-                string customPath = Path.Combine(destDir, "custom-list.json");
+                string customPath = Path.Combine(root, "custom-list.json");
                 if (!File.Exists(customPath))
                 {
                     string custom = Encoding.UTF8.GetString(Resources.CustomList);
                     File.WriteAllText(customPath, custom, Encoding.UTF8);
                 }
             }
-            catch (UnauthorizedAccessException)
-            {
-                // exe 目录只读（如 Program Files）：退回 %TEMP%
-                destDir = Path.Combine(Path.GetTempPath(), "AdClean");
-                Directory.CreateDirectory(destDir);
-                ps1Path = Path.Combine(destDir, "AdCleanGUI.ps1");
-                string embedded = Encoding.UTF8.GetString(Resources.AdCleanGUI);
-                File.WriteAllText(ps1Path, embedded, Encoding.UTF8);
-            }
+            catch { }
 
-            var psi = new ProcessStartInfo
+            // 进程内运行主程序（WinForms 需 STA，Main 已标记）
+            string script = Encoding.UTF8.GetString(Resources.AdCleanGUI);
+            using (Runspace runspace = RunspaceFactory.CreateRunspace())
             {
-                FileName = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell\\v1.0\\powershell.exe"),
-                Arguments = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"" + ps1Path + "\" -Root \"" + root + "\"",
-                UseShellExecute = false
-            };
-            using (var p = Process.Start(psi))
-            {
-                p.WaitForExit();
+                runspace.Open();
+                using (PowerShell engine = PowerShell.Create())
+                {
+                    engine.Runspace = runspace;
+                    engine.AddScript(script);
+                    engine.AddParameter("Root", root);
+                    engine.Invoke();
+                    if (engine.HadErrors && engine.Streams.Error.Count > 0)
+                    {
+                        var msgs = new StringBuilder();
+                        int n = 0;
+                        foreach (var e in engine.Streams.Error)
+                        {
+                            msgs.AppendLine(e.ToString());
+                            if (++n >= 5) break;
+                        }
+                        throw new Exception("脚本执行出错：\r\n" + msgs.ToString());
+                    }
+                }
             }
         }
     }

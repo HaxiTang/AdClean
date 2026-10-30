@@ -8,7 +8,7 @@
 param([switch]$SelfTest, [string]$Root)
 
 $ErrorActionPreference = 'Stop'
-[Console]::OutputEncoding = [Text.Encoding]::UTF8
+try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch { }  # 进程内运行（无控制台）时会抛异常，忽略即可
 
 $script:Dir = if ($Root) { $Root } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 $script:StateDir  = Join-Path $script:Dir 'state'
@@ -143,6 +143,7 @@ function Detect-Brand {
 }
 
 function Get-DeviceConnected {
+    if (-not $script:Adb) { return $null }
     $out = & $script:Adb devices 2>$null
     foreach ($line in $out) { if ($line -match '(\S+)\s+device\s*$') { return $Matches[1] } }
     return $null
@@ -202,6 +203,8 @@ if ($SelfTest) {
 # ============================================================
 #  GUI
 # ============================================================
+$script:Adb = Find-Adb
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -314,7 +317,11 @@ function Connect-Device {
     if ($serial -eq $script:Serial) { return }
     if (-not $serial) {
         $script:Serial = $null; $script:Brand = $null
-        $lblDevice.Text = '设备状态：未检测到手机，请连接 USB 并允许调试'
+        if (-not $script:Adb) {
+            $lblDevice.Text = '设备状态：未找到 adb。请将 platform-tools 放到程序目录，或安装 adb 并加入 PATH'
+        } else {
+            $lblDevice.Text = '设备状态：未检测到手机，请连接 USB 并允许调试'
+        }
         $lblDevice.ForeColor = 'Firebrick'; $lblBrand.Text = ''
         $lv.Items.Clear(); return
     }
