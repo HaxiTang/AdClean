@@ -10,7 +10,14 @@ param([switch]$SelfTest, [string]$Root)
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch { }  # 进程内运行（无控制台）时会抛异常，忽略即可
 
+# 声明 DPI 感知（必须先于任何窗口创建），避免高缩放屏幕上整体位图拉伸导致文字发糊
+try {
+    Add-Type -Namespace AdClean -Name DpiHelper -MemberDefinition '[DllImport("user32.dll")] public static extern bool SetProcessDPIAware();'
+    [void][AdClean.DpiHelper]::SetProcessDPIAware()
+} catch { }
+
 $script:Dir = if ($Root) { $Root } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$script:Version = '2.1'
 $script:StateDir  = Join-Path $script:Dir 'state'
 $script:CustomCfg = Join-Path $script:Dir 'custom-list.json'
 $script:BrandsCfg = Join-Path $script:Dir 'brands.json'
@@ -94,6 +101,29 @@ function Load-State([string]$serial) {
     if (Test-Path $f) { Get-Content $f -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
 }
 
+# 一次 getprop 拿全部系统属性（避免多次调用 adb 造成 UI 冻结）
+function Get-PropTable {
+    $t = @{}
+    $raw = [string](Invoke-Adb 'shell' 'getprop')
+    foreach ($m in [regex]::Matches($raw, '(?m)^\[([^\]]+)\]: \[(.*)\]')) {
+        $t[$m.Groups[1].Value] = $m.Groups[2].Value
+    }
+    return $t
+}
+
+# 一次拿到全量包状态（enabled/disabled/absent），避免逐包查询
+function Get-PkgStateMap {
+    $disabled = @{}
+    foreach ($line in @([string](Invoke-Adb 'shell' 'pm list packages -d') -split "`r?`n")) {
+        if ($line -match '^package:(\S+)') { $disabled[$Matches[1]] = $true }
+    }
+    $all = @{}
+    foreach ($line in @([string](Invoke-Adb 'shell' 'pm list packages') -split "`r?`n")) {
+        if ($line -match '^package:(\S+)') { $all[$Matches[1]] = $true }
+    }
+    return @{ all = $all; disabled = $disabled }
+}
+
 function Get-PkgState([string]$pkg) {
     $r = [string](Invoke-Adb 'shell' "pm list packages $pkg")
     if ($r -notmatch [regex]::Escape($pkg)) { return 'absent' }
@@ -114,14 +144,16 @@ function Restore-Pkg([string]$pkg) {
 }
 
 function Detect-Brand {
+    $t = Get-PropTable
     # 先按清单顺序探测各品牌的 getprop 属性
     foreach ($name in $script:Lists.Keys) {
         foreach ($p in @($script:BrandMeta[$name].props)) {
-            if ([string](Invoke-Adb 'shell' "getprop $p").Trim()) { return $name }
+            $v = [string]$t[$p]
+            if ($v.Trim()) { return $name }
         }
     }
     # 探测不到再按厂商名关键字兜底
-    $mk = [string](Invoke-Adb 'shell' 'getprop ro.product.manufacturer')
+    $mk = [string]$t['ro.product.manufacturer']
     foreach ($name in $script:Lists.Keys) {
         foreach ($m in @($script:BrandMeta[$name].makers)) {
             if ($mk -match ('(?i)' + [regex]::Escape($m))) { return $name }
@@ -280,7 +312,9 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 $f = New-Object System.Windows.Forms.Form
-$f.Text = 'AdClean · 安卓去广告精简工具'
+$f.Text = "AdClean v$script:Version · 安卓去广告精简工具"
+$f.AutoScaleDimensions = New-Object System.Drawing.SizeF(96, 96)
+$f.AutoScaleMode = 'Dpi'   # 按当前 DPI 自动缩放全部子控件，保证高分屏文字清晰且布局不重叠
 $f.Size = New-Object System.Drawing.Size(880, 700)
 $f.MinimumSize = New-Object System.Drawing.Size(760, 560)
 $f.StartPosition = 'CenterScreen'
@@ -375,6 +409,7 @@ $lblDevice.Size = New-Object System.Drawing.Size(560, 28)
 $lblDevice.Text = '  ●  设备状态：正在检测 adb 与手机连接…'
 $lblDevice.ForeColor = $script:C.sub
 $lblDevice.BackColor = $script:C.btn
+$lblDevice.AutoEllipsis = $true
 $lblBrand = New-Object System.Windows.Forms.Label
 $lblBrand.Location = New-Object System.Drawing.Point(20, 84)
 $lblBrand.Size = New-Object System.Drawing.Size(480, 18)
@@ -408,8 +443,12 @@ foreach ($chip in @($chipLow, $chipMed, $chipHigh)) {
 }
 $chipLow.Anchor = 'Top,Right'; $chipMed.Anchor = 'Top,Right'; $chipHigh.Anchor = 'Top,Right'
 Update-ChipStyle $chipLow; Update-ChipStyle $chipMed; Update-ChipStyle $chipHigh
+foreach ($chip in @($chipLow, $chipMed, $chipHigh)) {
+    $chip.Add_SizeChanged({ param($s, $e) Set-Rounded $s 14 })
+}
 Set-Rounded $chipLow 14; Set-Rounded $chipMed 14; Set-Rounded $chipHigh 14
 Set-Rounded $btnRefresh 8
+$btnRefresh.Add_SizeChanged({ param($s, $e) Set-Rounded $s 8 })
 $btnRefresh.FlatStyle = 'Flat'; $btnRefresh.Cursor = 'Hand'
 $btnRefresh.BackColor = $script:C.btn; $btnRefresh.ForeColor = $script:C.text
 $btnRefresh.FlatAppearance.BorderSize = 1
@@ -459,8 +498,8 @@ $flow.BackColor = $script:C.bg
 $flow.Padding = New-Object System.Windows.Forms.Padding(4, 0, 0, 0)
 function New-Btn([string]$text, [bool]$primary = $false) {
     $b = New-Object System.Windows.Forms.Button
-    $b.Text = $text; $b.Size = New-Object System.Drawing.Size(136, 36)
-    $b.Margin = New-Object System.Windows.Forms.Padding(6, 4, 6, 8)
+    $b.Text = $text; $b.Size = New-Object System.Drawing.Size(104, 36)
+    $b.Margin = New-Object System.Windows.Forms.Padding(5, 4, 5, 8)
     $b.FlatStyle = 'Flat'; $b.Cursor = 'Hand'
     $b.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9.25)
     $b.ForeColor = $script:C.text
@@ -479,12 +518,12 @@ function New-Btn([string]$text, [bool]$primary = $false) {
     }
     return $b
 }
-$btnScan    = New-Btn '扫描组件状态'
-$btnOneKey  = New-Btn '一键优化(推荐)' $true
-$btnFreeze  = New-Btn '冻结选中项'
-$btnRestore = New-Btn '还原选中项'
-$btnRestoreAll = New-Btn '还原全部(按记录)'
-$btnSettings   = New-Btn '应用系统优化'
+$btnScan    = New-Btn '扫描状态'
+$btnOneKey  = New-Btn '一键优化' $true
+$btnFreeze  = New-Btn '冻结选中'
+$btnRestore = New-Btn '还原选中'
+$btnRestoreAll = New-Btn '还原全部'
+$btnSettings   = New-Btn '系统优化'
 $flow.Controls.AddRange(@($btnScan, $btnOneKey, $btnFreeze, $btnRestore, $btnRestoreAll, $btnSettings))
 $log = New-Object System.Windows.Forms.RichTextBox
 $log.Multiline = $true; $log.ReadOnly = $true; $log.ScrollBars = 'Vertical'
@@ -526,8 +565,11 @@ function Get-CurrentItems {
 function Refresh-List {
     $lv.BeginUpdate(); $lv.Items.Clear()
     if (-not $script:Serial) { $lv.EndUpdate(); return }
+    $map = Get-PkgStateMap   # 批量查询，2 次 adb 调用代替逐包 2N 次
     foreach ($i in (Get-CurrentItems)) {
-        $state = Get-PkgState $i.pkg
+        $state = if (-not $map.all.ContainsKey($i.pkg)) { 'absent' }
+                 elseif ($map.disabled.ContainsKey($i.pkg)) { 'disabled' }
+                 else { 'active' }
         $row = New-Object System.Windows.Forms.ListViewItem($i.name)
         $row.UseItemStyleForSubItems = $false
         [void]$row.SubItems.Add($i.pkg)
@@ -567,9 +609,10 @@ function Connect-Device {
     }
     $script:Serial = $serial
     $script:Brand  = Detect-Brand
-    $model   = [string](Invoke-Adb 'shell' 'getprop ro.product.marketname')
-    $device  = [string](Invoke-Adb 'shell' 'getprop ro.product.device')
-    $android = [string](Invoke-Adb 'shell' 'getprop ro.build.version.release')
+    $t      = Get-PropTable
+    $model  = [string]$t['ro.product.marketname']
+    $device = [string]$t['ro.product.device']
+    $android = [string]$t['ro.build.version.release']
     $shown = if ($model.Trim()) { $model.Trim() } else { $device.Trim() }
     Set-StatusPill "设备状态：已连接 $shown (Android $android) 序列号 $serial" $script:C.ok
     $lblBrand.Text = "识别系统：$script:Brand" + $(if ($script:Brand -eq 'Unknown') { ' —— 未识别品牌，仅显示自定义清单' } else { '' })
