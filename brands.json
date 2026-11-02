@@ -1,0 +1,648 @@
+﻿{
+    "brands":  [
+                   {
+                       "name":  "小米/红米 (MIUI/HyperOS)",
+                       "props":  [
+                                     "ro.mi.os.version.name"
+                                 ],
+                       "manufacturers":  [
+                                             "xiaomi",
+                                             "redmi"
+                                         ],
+                       "settings":  [
+                                        "settings put secure ads_enabled 0",
+                                        "settings put global ad_enabled 0",
+                                        "settings put secure personalad_engine_status 0"
+                                    ],
+                       "items":  [
+                                     {
+                                         "pkg":  "com.miui.systemAdSolution",
+                                         "name":  "系统广告组件",
+                                         "desc":  "国内版广告核心，禁用后大部分系统广告消失",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.analytics",
+                                         "name":  "分析埋点上报",
+                                         "desc":  "用户行为数据上报",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.msa.global",
+                                         "name":  "海外广告组件",
+                                         "desc":  "国际版广告SDK，国行机通常不存在",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.hybrid",
+                                         "name":  "快应用服务",
+                                         "desc":  "信息流广告与秒开弹窗源头",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.hybrid.accessory",
+                                         "name":  "快应用组件",
+                                         "desc":  "快应用辅助进程",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.phrase",
+                                         "name":  "小米画报",
+                                         "desc":  "锁屏壁纸信息流",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.xiaomi.joyose",
+                                         "name":  "云控策略",
+                                         "desc":  "广告下发通道",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.cleanmaster",
+                                         "name":  "清理推广",
+                                         "desc":  "垃圾清理推广组件",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.yellowpage",
+                                         "name":  "黄页",
+                                         "desc":  "生活黄页广告",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.xiaomi.gamecenter",
+                                         "name":  "游戏中心",
+                                         "desc":  "游戏推广与通知",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.xiaomi.gamecenter.sdk.service",
+                                         "name":  "游戏SDK服务",
+                                         "desc":  "游戏推广组件",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.micredit.in",
+                                         "name":  "小米信贷",
+                                         "desc":  "贷款推广",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.bugreport",
+                                         "name":  "用户反馈",
+                                         "desc":  "反馈通道",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.xiaomi.shop",
+                                         "name":  "小米商城",
+                                         "desc":  "商城推广通知",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.player",
+                                         "name":  "小米音乐",
+                                         "desc":  "含推广，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.videoplayer",
+                                         "name":  "小米视频",
+                                         "desc":  "含信息流",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.gamebooster",
+                                         "name":  "游戏加速",
+                                         "desc":  "含推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.contentextension",
+                                         "name":  "传送门",
+                                         "desc":  "长按取词推送，禁后取词失效",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.personalassistant",
+                                         "name":  "负一屏",
+                                         "desc":  "信息流广告，禁后负一屏消失",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.xiaomi.midrop",
+                                         "name":  "小米分享",
+                                         "desc":  "文件互传，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.guardprovider",
+                                         "name":  "应用扫描",
+                                         "desc":  "AVG扫描引擎，禁后装应用不再安全扫描",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.android.thememanager",
+                                         "name":  "主题壁纸",
+                                         "desc":  "禁后无法更换主题",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.miui.weather2",
+                                         "name":  "天气",
+                                         "desc":  "禁后系统天气不可用",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.xiaomi.mipicks",
+                                         "name":  "应用商店",
+                                         "desc":  "禁后无法安装/更新应用",
+                                         "risk":  "high"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "OPPO/一加/Realme (ColorOS)",
+                       "props":  [
+                                     "ro.build.version.oplusROM"
+                                 ],
+                       "manufacturers":  [
+                                             "oppo",
+                                             "oneplus",
+                                             "realme"
+                                         ],
+                       "settings":  [
+                                        "settings put secure oplus_plPAY_recommand_close 1",
+                                        "settings put secure oppo_market_referrer 0"
+                                    ],
+                       "items":  [
+                                     {
+                                         "pkg":  "com.oplus.motor",
+                                         "name":  "付费主题推广",
+                                         "desc":  "主题字体付费推广组件",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.wifibackup",
+                                         "name":  "WiFi备份",
+                                         "desc":  "云端备份推广",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "info.mnotify",
+                                         "name":  "营销通知",
+                                         "desc":  "OPPO营销推送",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.nearme.statistics.rom",
+                                         "name":  "统计上报",
+                                         "desc":  "用户数据上报",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.ted.number",
+                                         "name":  "号码助手",
+                                         "desc":  "黄页识别类",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.crashbox",
+                                         "name":  "崩溃收集",
+                                         "desc":  "崩溃上报，禁后反馈失效",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.postmanservice",
+                                         "name":  "推送服务",
+                                         "desc":  "系统级推送（含营销）",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.coloros.phrase",
+                                         "name":  "画报资讯",
+                                         "desc":  "锁屏画报信息流",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.pay",
+                                         "name":  "OPPO钱包",
+                                         "desc":  "NFC支付，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.ovoicemanager",
+                                         "name":  "语音助手管理",
+                                         "desc":  "小布助手相关",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.logkit",
+                                         "name":  "日志工具",
+                                         "desc":  "日志采集",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.battery",
+                                         "name":  "电池实验室",
+                                         "desc":  "实验性电池功能",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.heytap.themestore",
+                                         "name":  "主题商店",
+                                         "desc":  "付费主题推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.heytap.browser",
+                                         "name":  "OPPO浏览器",
+                                         "desc":  "含资讯流",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.heytap.openmarket",
+                                         "name":  "开放市场",
+                                         "desc":  "预装推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.oplus.games",
+                                         "name":  "游戏中心",
+                                         "desc":  "游戏推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.heytap.market",
+                                         "name":  "软件商店",
+                                         "desc":  "禁后无法安装/更新应用",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.coloros.weather.service",
+                                         "name":  "天气服务",
+                                         "desc":  "禁后天气不可用",
+                                         "risk":  "high"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "华为/荣耀 (EMUI/HarmonyOS/MagicOS)",
+                       "props":  [
+                                     "ro.build.version.emui",
+                                     "ro.build.version.magic"
+                                 ],
+                       "manufacturers":  [
+                                             "huawei",
+                                             "honor"
+                                         ],
+                       "settings":  [
+                                        null
+                                    ],
+                       "items":  [
+                                     {
+                                         "pkg":  "com.huawei.fastapp",
+                                         "name":  "快应用服务",
+                                         "desc":  "快应用弹窗与信息流源头",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.hihonor.fastapp",
+                                         "name":  "快应用服务",
+                                         "desc":  "荣耀快应用组件",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.hifolder",
+                                         "name":  "猜你喜欢",
+                                         "desc":  "桌面文件夹推荐推广流",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.tips",
+                                         "name":  "使用技巧",
+                                         "desc":  "系统技巧推送",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.gamebox",
+                                         "name":  "游戏中心",
+                                         "desc":  "游戏推广与通知",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.hihonor.gamebox",
+                                         "name":  "游戏中心",
+                                         "desc":  "荣耀游戏推广",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.search",
+                                         "name":  "智慧搜索",
+                                         "desc":  "桌面下滑搜索信息流，禁后下滑搜索失效",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.hihonor.search",
+                                         "name":  "智慧搜索",
+                                         "desc":  "荣耀桌面搜索信息流",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.phoneservice",
+                                         "name":  "我的华为",
+                                         "desc":  "含活动推广，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.hihonor.phoneservice",
+                                         "name":  "我的荣耀",
+                                         "desc":  "含活动推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.intelligent",
+                                         "name":  "智慧助手·今天",
+                                         "desc":  "负一屏信息流，禁后负一屏消失",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.hihonor.intelligent",
+                                         "name":  "智慧助手·今天",
+                                         "desc":  "荣耀负一屏信息流",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.himovie",
+                                         "name":  "华为视频",
+                                         "desc":  "含信息流推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.music",
+                                         "name":  "华为音乐",
+                                         "desc":  "含推广，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.browser",
+                                         "name":  "华为浏览器",
+                                         "desc":  "含资讯流",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.hihonor.browser",
+                                         "name":  "荣耀浏览器",
+                                         "desc":  "含资讯流",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.android.totemweather",
+                                         "name":  "天气",
+                                         "desc":  "禁后系统天气不可用",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.android.thememanager",
+                                         "name":  "主题",
+                                         "desc":  "禁后无法更换主题",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.huawei.appmarket",
+                                         "name":  "应用市场",
+                                         "desc":  "禁后无法安装/更新应用",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.hihonor.appmarket",
+                                         "name":  "荣耀应用市场",
+                                         "desc":  "禁后无法安装/更新应用",
+                                         "risk":  "high"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "vivo/iQOO (OriginOS/Funtouch)",
+                       "props":  [
+                                     "ro.vivo.os.version"
+                                 ],
+                       "manufacturers":  [
+                                             "vivo",
+                                             "iqoo"
+                                         ],
+                       "settings":  [
+                                        null
+                                    ],
+                       "items":  [
+                                     {
+                                         "pkg":  "com.vivo.hybrid",
+                                         "name":  "快应用服务",
+                                         "desc":  "快应用弹窗源头",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.vivo.game",
+                                         "name":  "游戏中心",
+                                         "desc":  "游戏推广与通知",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.vivo.browser",
+                                         "name":  "vivo浏览器",
+                                         "desc":  "含资讯流",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.vivo.video",
+                                         "name":  "vivo视频",
+                                         "desc":  "含信息流推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.vivo.music",
+                                         "name":  "vivo音乐",
+                                         "desc":  "含推广，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.vivo.theme",
+                                         "name":  "i主题",
+                                         "desc":  "主题商店推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.vivo.assistant",
+                                         "name":  "Jovi语音",
+                                         "desc":  "语音助手，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.vivo.weather",
+                                         "name":  "天气",
+                                         "desc":  "禁后系统天气不可用",
+                                         "risk":  "high"
+                                     },
+                                     {
+                                         "pkg":  "com.bbk.appstore",
+                                         "name":  "应用商店",
+                                         "desc":  "禁后无法安装/更新应用",
+                                         "risk":  "high"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "三星 (One UI)",
+                       "props":  [
+                                     "ro.build.version.oneui"
+                                 ],
+                       "manufacturers":  [
+                                             "samsung"
+                                         ],
+                       "settings":  [
+                                        null
+                                    ],
+                       "items":  [
+                                     {
+                                         "pkg":  "com.sec.spp.push",
+                                         "name":  "三星推送",
+                                         "desc":  "营销活动推送通道",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.app.spage",
+                                         "name":  "Samsung Free",
+                                         "desc":  "负一屏资讯流广告",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.game.gamehome",
+                                         "name":  "游戏中心",
+                                         "desc":  "游戏推广",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.game.cloudgame",
+                                         "name":  "云游戏",
+                                         "desc":  "云游戏推广",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.app.galaxyfinder",
+                                         "name":  "Finder搜索",
+                                         "desc":  "桌面搜索，禁后下滑搜索失效",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.game.gametools",
+                                         "name":  "游戏工具箱",
+                                         "desc":  "游戏侧边栏，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.themestore",
+                                         "name":  "主题商店",
+                                         "desc":  "付费主题推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.videos",
+                                         "name":  "三星视频",
+                                         "desc":  "含推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.samsung.android.bixby.agent",
+                                         "name":  "Bixby语音",
+                                         "desc":  "语音助手，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.sec.android.app.samsungapps",
+                                         "name":  "Galaxy商店",
+                                         "desc":  "禁后无法安装/更新应用",
+                                         "risk":  "high"
+                                     }
+                                 ]
+                   },
+                   {
+                       "name":  "魅族 (Flyme)",
+                       "props":  [
+                                     "ro.build.version.flyme"
+                                 ],
+                       "manufacturers":  [
+                                             "meizu"
+                                         ],
+                       "settings":  [
+                                        null
+                                    ],
+                       "items":  [
+                                     {
+                                         "pkg":  "com.meizu.compaign",
+                                         "name":  "活动推广",
+                                         "desc":  "限免/活动推广组件",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.meizu.gamecenter.service",
+                                         "name":  "游戏中心",
+                                         "desc":  "游戏推广与通知",
+                                         "risk":  "low"
+                                     },
+                                     {
+                                         "pkg":  "com.meizu.media.video",
+                                         "name":  "魅族视频",
+                                         "desc":  "含信息流推广",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.meizu.media.music",
+                                         "name":  "魅族音乐",
+                                         "desc":  "含推广，不用可禁",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.meizu.browser",
+                                         "name":  "魅族浏览器",
+                                         "desc":  "含资讯流",
+                                         "risk":  "medium"
+                                     },
+                                     {
+                                         "pkg":  "com.meizu.mstore",
+                                         "name":  "应用商店",
+                                         "desc":  "禁后无法安装/更新应用",
+                                         "risk":  "high"
+                                     }
+                                 ]
+                   }
+               ],
+    "forbidden":  [
+                      "com.android.launcher",
+                      "com.miui.home",
+                      "com.oppo.launcher",
+                      "com.android.systemui",
+                      "com.android.settings",
+                      "com.miui.securitycenter",
+                      "com.coloros.safecenter",
+                      "com.oplus.securitycenter",
+                      "com.xiaomi.xmsf",
+                      "com.xiaomi.finddevice",
+                      "com.miui.cloudservice",
+                      "com.miui.powerkeeper",
+                      "com.android.updater",
+                      "com.miui.securitycore",
+                      "com.oplus.ocpa",
+                      "com.android.providers.telephony",
+                      "com.huawei.android.launcher",
+                      "com.hihonor.android.launcher",
+                      "com.huawei.systemmanager",
+                      "com.hihonor.systemmanager",
+                      "com.bbk.launcher2",
+                      "com.iqoo.secure",
+                      "com.vivo.permissionmanager",
+                      "com.sec.android.app.launcher",
+                      "com.samsung.android.lool",
+                      "com.meizu.flyme.launcher",
+                      "com.meizu.safe"
+                  ]
+}

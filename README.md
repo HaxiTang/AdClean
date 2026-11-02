@@ -1,6 +1,6 @@
 # AdClean
 
-通用安卓去广告 / 系统精简工具。**小米 / 红米（MIUI · HyperOS）**、**OPPO / 一加 / Realme（ColorOS）** 通用。
+通用安卓去广告 / 系统精简工具。支持 **小米/红米（MIUI·HyperOS）**、**OPPO/一加/Realme（ColorOS）**、**华为/荣耀（EMUI·HarmonyOS·MagicOS）**、**vivo/iQOO（OriginOS·Funtouch）**、**三星（One UI）**、**魅族（Flyme）** 六大主流品牌。
 
 免 Root、免解锁 Bootloader，通过 ADB 以用户级方式冻结系统广告组件，全程可一键还原。
 
@@ -8,20 +8,22 @@
 
 ## 功能
 
-- **图形界面**：组件勾选操作，风险分级（低 / 中 / 高），实时显示每个包的运行状态
-- **品牌自动识别**：通过系统属性检测 MIUI/HyperOS 或 ColorOS，加载对应组件清单（42 项内置）
+- **图形界面**：圆角卡片式浅色 UI，组件勾选操作，风险分级（低 / 中 / 高），实时显示每个包的运行状态
+- **品牌自动识别**：通过系统属性检测品牌，加载对应组件清单（6 大品牌 87 项内置）
 - **一键优化**：自动冻结全部低风险广告组件（系统广告、快应用、埋点、营销推送等）
 - **三层还原**：还原选中项 / 按本机记录还原全部（`state\序列号.json`）/ 任意 `pm enable`
-- **核心保护**：桌面、SystemUI、手机管家、查找设备等 16 类关键包硬编码禁止操作
+- **核心保护**：桌面、SystemUI、手机管家、查找设备等关键包禁止操作
 - **系统开关优化**：按品牌执行 `settings` 级广告开关关闭
-- **自定义扩展**：`custom-list.json` 添加任意包名；`$script:Lists` 增补新品牌清单
+- **全量可配置**：品牌清单、识别规则、禁止操作包全部在 `brands.json` 中维护，改文件即生效
+- **自定义扩展**：`custom-list.json` 添加任意包名
+- **adb 自动下载**：未检测到 platform-tools 时自动从镜像源下载并解压
 - **零依赖**：Windows 自带 PowerShell 运行；exe 为自包含单文件
 
 ## 使用
 
-1. 下载 [Android platform-tools](https://developer.android.google.cn/tools/releases/platform-tools)，把 `platform-tools` 文件夹放进本目录
+1. 双击 `dist\AdClean.exe`（未检测到 adb 会自动下载 platform-tools；也可手动把 `platform-tools` 文件夹放进 exe 同目录）
 2. 手机开启 USB 调试并连接（首次授权弹窗点允许）
-3. 双击 `dist\AdClean.exe` → 点「一键优化(推荐)」
+3. 点「一键优化(推荐)」
 
 | 品牌 | 开启 USB 调试 |
 |---|---|

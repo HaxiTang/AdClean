@@ -13,73 +13,52 @@ try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch { }  # 进程内
 $script:Dir = if ($Root) { $Root } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 $script:StateDir  = Join-Path $script:Dir 'state'
 $script:CustomCfg = Join-Path $script:Dir 'custom-list.json'
+$script:BrandsCfg = Join-Path $script:Dir 'brands.json'
 $script:Adb       = $null
 $script:Serial    = $null
 $script:Brand     = $null
 
-# ============================================================
-#  组件清单  risk: low=放心禁 medium=按需 high=有副作用需了解
-# ============================================================
-$script:Lists = [ordered]@{
-    '小米/红米 (MIUI/HyperOS)' = @(
-        @{ pkg='com.miui.systemAdSolution';       name='系统广告组件';   risk='low';    desc='国内版广告核心，禁用后大部分系统广告消失' }
-        @{ pkg='com.miui.analytics';              name='分析埋点上报';   risk='low';    desc='用户行为数据上报' }
-        @{ pkg='com.miui.msa.global';             name='海外广告组件';   risk='low';    desc='国际版广告SDK，国行机通常不存在' }
-        @{ pkg='com.miui.hybrid';                 name='快应用服务';     risk='low';    desc='信息流广告与秒开弹窗源头' }
-        @{ pkg='com.miui.hybrid.accessory';       name='快应用组件';     risk='low';    desc='快应用辅助进程' }
-        @{ pkg='com.miui.phrase';                 name='小米画报';       risk='low';    desc='锁屏壁纸信息流' }
-        @{ pkg='com.xiaomi.joyose';               name='云控策略';       risk='low';    desc='广告下发通道' }
-        @{ pkg='com.miui.cleanmaster';            name='清理推广';       risk='low';    desc='垃圾清理推广组件' }
-        @{ pkg='com.miui.yellowpage';             name='黄页';           risk='low';    desc='生活黄页广告' }
-        @{ pkg='com.xiaomi.gamecenter';           name='游戏中心';       risk='low';    desc='游戏推广与通知' }
-        @{ pkg='com.xiaomi.gamecenter.sdk.service'; name='游戏SDK服务';  risk='low';    desc='游戏推广组件' }
-        @{ pkg='com.micredit.in';                 name='小米信贷';       risk='low';    desc='贷款推广' }
-        @{ pkg='com.miui.bugreport';              name='用户反馈';       risk='low';    desc='反馈通道' }
-        @{ pkg='com.xiaomi.shop';                 name='小米商城';       risk='medium'; desc='商城推广通知' }
-        @{ pkg='com.miui.player';                 name='小米音乐';       risk='medium'; desc='含推广，不用可禁' }
-        @{ pkg='com.miui.videoplayer';            name='小米视频';       risk='medium'; desc='含信息流' }
-        @{ pkg='com.miui.gamebooster';            name='游戏加速';       risk='medium'; desc='含推广' }
-        @{ pkg='com.miui.contentextension';       name='传送门';         risk='medium'; desc='长按取词推送，禁后取词失效' }
-        @{ pkg='com.miui.personalassistant';      name='负一屏';         risk='medium'; desc='信息流广告，禁后负一屏消失' }
-        @{ pkg='com.xiaomi.midrop';               name='小米分享';       risk='medium'; desc='文件互传，不用可禁' }
-        @{ pkg='com.miui.guardprovider';          name='应用扫描';       risk='high';   desc='AVG扫描引擎，禁后装应用不再安全扫描' }
-        @{ pkg='com.android.thememanager';        name='主题壁纸';       risk='high';   desc='禁后无法更换主题' }
-        @{ pkg='com.miui.weather2';               name='天气';           risk='high';   desc='禁后系统天气不可用' }
-        @{ pkg='com.xiaomi.mipicks';              name='应用商店';       risk='high';   desc='禁后无法安装/更新应用' }
-    )
-    'OPPO/一加/Realme (ColorOS)' = @(
-        @{ pkg='com.oplus.motor';                 name='付费主题推广';   risk='low';    desc='主题字体付费推广组件' }
-        @{ pkg='com.oplus.wifibackup';            name='WiFi备份';       risk='low';    desc='云端备份推广' }
-        @{ pkg='info.mnotify';                    name='营销通知';       risk='low';    desc='OPPO营销推送' }
-        @{ pkg='com.nearme.statistics.rom';       name='统计上报';       risk='low';    desc='用户数据上报' }
-        @{ pkg='com.ted.number';                  name='号码助手';       risk='low';    desc='黄页识别类' }
-        @{ pkg='com.oplus.crashbox';              name='崩溃收集';       risk='low';    desc='崩溃上报，禁后反馈失效' }
-        @{ pkg='com.oplus.postmanservice';        name='推送服务';       risk='low';    desc='系统级推送（含营销）' }
-        @{ pkg='com.coloros.phrase';              name='画报资讯';       risk='low';    desc='锁屏画报信息流' }
-        @{ pkg='com.oplus.pay';                   name='OPPO钱包';       risk='medium'; desc='NFC支付，不用可禁' }
-        @{ pkg='com.oplus.ovoicemanager';         name='语音助手管理';   risk='medium'; desc='小布助手相关' }
-        @{ pkg='com.oplus.logkit';                name='日志工具';       risk='medium'; desc='日志采集' }
-        @{ pkg='com.oplus.battery';               name='电池实验室';     risk='medium'; desc='实验性电池功能' }
-        @{ pkg='com.heytap.themestore';           name='主题商店';       risk='medium'; desc='付费主题推广' }
-        @{ pkg='com.heytap.browser';              name='OPPO浏览器';     risk='medium'; desc='含资讯流' }
-        @{ pkg='com.heytap.openmarket';           name='开放市场';       risk='medium'; desc='预装推广' }
-        @{ pkg='com.oplus.games';                 name='游戏中心';       risk='medium'; desc='游戏推广' }
-        @{ pkg='com.heytap.market';               name='软件商店';       risk='high';   desc='禁后无法安装/更新应用' }
-        @{ pkg='com.coloros.weather.service';     name='天气服务';       risk='high';   desc='禁后天气不可用' }
-    )
-}
 
-# 各品牌的系统开关优化（可逆）
-$script:SettingsByBrand = @{
-    '小米/红米 (MIUI/HyperOS)'   = @('settings put secure ads_enabled 0', 'settings put global ad_enabled 0', 'settings put secure personalad_engine_status 0')
-    'OPPO/一加/Realme (ColorOS)' = @('settings put secure oplus_plPAY_recommand_close 1', 'settings put secure oppo_market_referrer 0')
+# ============================================================
+#  品牌与禁止清单配置：全部来自 brands.json（必须存在）
+# ============================================================
+function Import-BrandsConfig {
+    if (-not (Test-Path $script:BrandsCfg)) { throw ('配置文件不存在：' + $script:BrandsCfg) }
+    $cfg = Get-Content $script:BrandsCfg -Raw -Encoding UTF8 | ConvertFrom-Json
+    $lists = [ordered]@{}
+    $meta  = [ordered]@{}
+    $sets  = @{}
+    foreach ($b in @($cfg.brands)) {
+        if (-not $b.name) { continue }
+        $items = @()
+        foreach ($i in @($b.items)) {
+            if (-not $i.pkg) { continue }
+            $items += @{
+                pkg  = [string]$i.pkg
+                name = [string]$i.name
+                risk = if ($i.risk) { [string]$i.risk } else { 'low' }
+                desc = [string]$i.desc
+            }
+        }
+        $lists[$b.name] = $items
+        $meta[$b.name]  = @{ props = @($b.props); makers = @($b.manufacturers) }
+        $sets[$b.name]  = @($b.settings)
+    }
+    if ($lists.Keys.Count -eq 0) { throw 'brands.json 中没有有效品牌' }
+    $script:Lists = $lists
+    $script:BrandMeta = $meta
+    $script:SettingsByBrand = $sets
+    $script:Forbidden = @($cfg.forbidden)
 }
-
-# 绝对禁止操作的核心包
-$script:Forbidden = @('com.android.launcher','com.miui.home','com.oppo.launcher','com.android.systemui',
-    'com.android.settings','com.miui.securitycenter','com.coloros.safecenter','com.oplus.securitycenter',
-    'com.xiaomi.xmsf','com.xiaomi.finddevice','com.miui.cloudservice','com.miui.powerkeeper',
-    'com.android.updater','com.miui.securitycore','com.oplus.ocpa','com.android.providers.telephony')
+try {
+    Import-BrandsConfig
+} catch {
+    $msg = 'AdClean 配置加载失败：' + $_.Exception.Message + "`r`n请确认程序目录下 brands.json 存在且内容合法。"
+    if ($SelfTest) { Write-Output ('SELFTEST FAILED: ' + $msg); exit 1 }
+    Add-Type -AssemblyName System.Windows.Forms | Out-Null
+    [void][System.Windows.Forms.MessageBox]::Show($msg, 'AdClean', 'OK', 'Error')
+    exit 1
+}
 
 # ============================================================
 #  引擎层
@@ -87,6 +66,9 @@ $script:Forbidden = @('com.android.launcher','com.miui.home','com.oppo.launcher'
 function Find-Adb {
     $local = Join-Path $script:Dir 'platform-tools\adb.exe'
     if (Test-Path $local) { return $local }
+    # 兼容：脚本在项目根目录直接运行时，复用 dist 下已下载的 platform-tools，避免重复下载
+    $dist = Join-Path $script:Dir 'dist\platform-tools\adb.exe'
+    if (Test-Path $dist) { return $dist }
     $c = Get-Command adb -ErrorAction SilentlyContinue
     if ($c) { return $c.Source }
     return $null
@@ -132,13 +114,19 @@ function Restore-Pkg([string]$pkg) {
 }
 
 function Detect-Brand {
-    $mi  = [string](Invoke-Adb 'shell' 'getprop ro.mi.os.version.name')
-    $opl = [string](Invoke-Adb 'shell' 'getprop ro.build.version.oplusROM')
-    if ($mi.Trim())  { return '小米/红米 (MIUI/HyperOS)' }
-    if ($opl.Trim()) { return 'OPPO/一加/Realme (ColorOS)' }
-    $b = [string](Invoke-Adb 'shell' 'getprop ro.product.manufacturer')
-    if ($b -match '(?i)xiaomi|redmi')    { return '小米/红米 (MIUI/HyperOS)' }
-    if ($b -match '(?i)oppo|oneplus|realme') { return 'OPPO/一加/Realme (ColorOS)' }
+    # 先按清单顺序探测各品牌的 getprop 属性
+    foreach ($name in $script:Lists.Keys) {
+        foreach ($p in @($script:BrandMeta[$name].props)) {
+            if ([string](Invoke-Adb 'shell' "getprop $p").Trim()) { return $name }
+        }
+    }
+    # 探测不到再按厂商名关键字兜底
+    $mk = [string](Invoke-Adb 'shell' 'getprop ro.product.manufacturer')
+    foreach ($name in $script:Lists.Keys) {
+        foreach ($m in @($script:BrandMeta[$name].makers)) {
+            if ($mk -match ('(?i)' + [regex]::Escape($m))) { return $name }
+        }
+    }
     return 'Unknown'
 }
 
@@ -164,6 +152,75 @@ function Get-MergedItems([string]$brand) {
         if ($i.pkg -and -not $seen.ContainsKey($i.pkg)) { $seen[$i.pkg] = $true; $result += $i }
     }
     return $result
+}
+
+# 后台子进程下载官方 platform-tools（不阻塞 GUI）
+function Start-AdbDownload {
+    if (-not (Test-Path $script:StateDir)) { New-Item -ItemType Directory -Path $script:StateDir -Force | Out-Null }
+    $flag = Join-Path $script:StateDir 'adb-setup.flag'
+    Remove-Item $flag -Force -ErrorAction SilentlyContinue
+    $worker = @'
+$ErrorActionPreference = 'Stop'
+$dir  = '__DIR__'
+$flag = '__FLAG__'
+try {
+    $zip = Join-Path $env:TEMP 'platform-tools-latest-windows.zip'
+    $urls = @(
+        'https://mirrors.cloud.tencent.com/AndroidSDK/platform-tools-latest-windows.zip',
+        'https://dl.google.com/android/repository/platform-tools-latest-windows.zip'
+    )
+    $curl = Join-Path $env:SystemRoot 'System32\curl.exe'
+    $ok = $false
+    foreach ($u in $urls) {
+        if (Test-Path $curl) {
+            & $curl -L -sS --max-time 300 --retry 2 -o $zip $u 2>$null
+            if ($LASTEXITCODE -eq 0 -and (Test-Path $zip) -and (Get-Item $zip).Length -gt 1MB) { $ok = $true; break }
+        } else {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $wc = New-Object System.Net.WebClient
+            $wc.Headers.Add('User-Agent', 'Mozilla/5.0')
+            try { $wc.DownloadFile($u, $zip); $ok = $true; break } catch { }
+        }
+    }
+    if (-not $ok) { throw '所有下载源均不可达' }
+    $pt = Join-Path $dir 'platform-tools'
+    if (Test-Path $pt) { Remove-Item $pt -Recurse -Force }
+    Expand-Archive -Path $zip -DestinationPath $dir -Force
+    Remove-Item $zip -Force -ErrorAction SilentlyContinue
+    Set-Content -Path $flag -Value 'ok' -Encoding ASCII
+} catch {
+    Set-Content -Path $flag -Value ('fail: ' + $_.Exception.Message) -Encoding UTF8
+}
+'@
+    $worker = $worker.Replace('__DIR__', $script:Dir).Replace('__FLAG__', $flag)
+    $wf = Join-Path $script:StateDir 'adb-setup.ps1'
+    [IO.File]::WriteAllText($wf, $worker, (New-Object Text.UTF8Encoding $true))
+    Start-Process powershell -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', $wf) -WindowStyle Hidden | Out-Null
+}
+
+# 无 adb 时：触发下载并轮询结果；返回 $true 表示 adb 已可用
+function Update-AdbSetup {
+    if ($script:Adb) { return $true }
+    $flag = Join-Path $script:StateDir 'adb-setup.flag'
+    if (-not $script:AdbDlStarted) {
+        Start-AdbDownload
+        $script:AdbDlStarted = $true
+        Set-StatusPill '设备状态：未找到 adb，正在自动下载 platform-tools（约几十 MB，请耐心等待）…' $script:C.warn
+        $lblBrand.Text = ''
+        return $false
+    }
+    $script:Adb = Find-Adb
+    if ($script:Adb) {
+        Set-StatusPill '设备状态：adb 已就绪，正在检测手机连接…' $script:C.sub
+        return $true
+    }
+    if (Test-Path $flag) {
+        $r = ([string](Get-Content $flag -Raw -Encoding UTF8)).Trim()
+        if ($r -eq 'ok') { return $false }  # 解压完成但路径未生效，下一轮 Find-Adb 会拿到
+        Set-StatusPill '设备状态：adb 自动下载失败，请手动解压 platform-tools 到程序目录后点「刷新设备」' $script:C.bad
+        $lblBrand.Text = '原因：' + $r
+    }
+    return $false
 }
 
 # ============================================================
@@ -196,6 +253,18 @@ if ($SelfTest) {
     $c = Get-CustomItems
     if ($c.Count -ne 1 -or $c[0].pkg -ne 'x.y.z') { $fail += '自定义清单解析失败' }
     Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+    # brands.json 配置导入测试
+    $tmpCfg = Join-Path $env:TEMP "adclean_brands_$PID.json"
+    '{"brands":[{"name":"测试品牌","props":["ro.test.brand"],"manufacturers":["testco"],"settings":["settings put test 1"],"items":[{"pkg":"t.e.s.t","name":"测试项","risk":"low","desc":"d"}]}],"forbidden":["t.e.s.t"]}' |
+        Set-Content $tmpCfg -Encoding UTF8
+    $script:BrandsCfg = $tmpCfg
+    Import-BrandsConfig
+    if ($script:Lists.Keys -notcontains '测试品牌') { $fail += 'brands.json 品牌导入失败' }
+    if ($script:Forbidden -notcontains 't.e.s.t') { $fail += 'brands.json 禁止清单导入失败' }
+    Remove-Item $tmpCfg -Force -ErrorAction SilentlyContinue
+    # 缺少 brands.json 时必须报错
+    $script:BrandsCfg = Join-Path $env:TEMP "no_such_cfg_$PID.json"
+    try { Import-BrandsConfig; $fail += '缺少配置文件时未报错' } catch { }
     if ($fail.Count -eq 0) { Write-Output 'SELFTEST OK'; exit 0 }
     else { Write-Output ("SELFTEST FAILED:`n" + ($fail -join "`n")); exit 1 }
 }
@@ -204,6 +273,7 @@ if ($SelfTest) {
 #  GUI
 # ============================================================
 $script:Adb = Find-Adb
+$script:AdbDlStarted = $false
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -216,80 +286,238 @@ $f.MinimumSize = New-Object System.Drawing.Size(760, 560)
 $f.StartPosition = 'CenterScreen'
 $f.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9)
 
-# --- 顶部：设备信息 ---
+# ============================================================
+#  主题色板（浅色）
+# ============================================================
+$script:C = @{
+    bg      = [System.Drawing.Color]::FromArgb(243, 245, 249)
+    surface = [System.Drawing.Color]::FromArgb(255, 255, 255)
+    line    = [System.Drawing.Color]::FromArgb(229, 232, 240)
+    text    = [System.Drawing.Color]::FromArgb(31, 35, 41)
+    sub     = [System.Drawing.Color]::FromArgb(107, 114, 128)
+    faint   = [System.Drawing.Color]::FromArgb(156, 163, 175)
+    accent  = [System.Drawing.Color]::FromArgb(47, 107, 255)
+    accentH = [System.Drawing.Color]::FromArgb(84, 132, 255)
+    ok      = [System.Drawing.Color]::FromArgb(22, 163, 74)
+    warn    = [System.Drawing.Color]::FromArgb(217, 119, 6)
+    bad     = [System.Drawing.Color]::FromArgb(220, 38, 38)
+    dim     = [System.Drawing.Color]::FromArgb(100, 116, 139)
+    ghost   = [System.Drawing.Color]::FromArgb(184, 191, 201)
+    btn     = [System.Drawing.Color]::FromArgb(255, 255, 255)
+    btnH    = [System.Drawing.Color]::FromArgb(240, 243, 250)
+    input   = [System.Drawing.Color]::FromArgb(247, 248, 250)
+}
+
+# 圆角：用 GraphicsPath 裁剪控件区域（参考 WinForms Control.Region 标准做法）
+function Set-Rounded($ctl, [int]$radius) {
+    if ($ctl.Width -le 0 -or $ctl.Height -le 0) { return }
+    $p = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $r = [Math]::Min($radius, [Math]::Min($ctl.Width, $ctl.Height) / 2)
+    $p.AddArc(0, 0, 2 * $r, 2 * $r, 180, 90)
+    $p.AddArc($ctl.Width - 2 * $r, 0, 2 * $r, 2 * $r, 270, 90)
+    $p.AddArc($ctl.Width - 2 * $r, $ctl.Height - 2 * $r, 2 * $r, 2 * $r, 0, 90)
+    $p.AddArc(0, $ctl.Height - 2 * $r, 2 * $r, 2 * $r, 90, 90)
+    $p.CloseFigure()
+    $ctl.Region = New-Object System.Drawing.Region $p
+    $p.Dispose()
+}
+
+# 颜色混合：前景色按比例混入背景色，用于芯片开关的选中底色
+function Get-Blend($fg, $bg, [double]$f) {
+    return [System.Drawing.Color]::FromArgb(
+        [int]($bg.R * (1 - $f) + $fg.R * $f),
+        [int]($bg.G * (1 - $f) + $fg.G * $f),
+        [int]($bg.B * (1 - $f) + $fg.B * $f))
+}
+
+# 筛选芯片（药丸开关）：状态存 $script:ChipOn，样式统一由 Update-ChipStyle 管理
+$script:ChipOn     = @{ low = $true; medium = $true; high = $false }
+$script:ChipColors = @{ low = $script:C.ok; medium = $script:C.warn; high = $script:C.bad }
+function Update-ChipStyle($b) {
+    $on  = [bool]$script:ChipOn[$b.Name]
+    $col = $script:ChipColors[$b.Name]
+    if ($on) {
+        $b.BackColor = Get-Blend $col ([System.Drawing.Color]::White) 0.12
+        $b.ForeColor = $col
+    } else {
+        $b.BackColor = [System.Drawing.Color]::FromArgb(238, 241, 246)
+        $b.ForeColor = $script:C.faint
+    }
+}
+
+# 状态药丸：文字 + 底色随状态联动
+function Set-StatusPill([string]$text, $color) {
+    $lblDevice.Text = '  ●  ' + $text
+    $lblDevice.ForeColor = $color
+    $lblDevice.BackColor = Get-Blend $color $script:C.surface 0.14
+}
+
+# --- 顶部：Logo + 设备状态 ---
 $panelTop = New-Object System.Windows.Forms.Panel
-$panelTop.Dock = 'Top'; $panelTop.Height = 64
+$panelTop.Dock = 'Top'; $panelTop.Width = 844; $panelTop.Height = 104
+$panelTop.BackColor = $script:C.surface
+$panelTop.Padding = New-Object System.Windows.Forms.Padding(18, 12, 14, 10)
+$lblLogo = New-Object System.Windows.Forms.Label
+$lblLogo.Location = New-Object System.Drawing.Point(18, 10)
+$lblLogo.Size = New-Object System.Drawing.Size(120, 32)
+$lblLogo.Text = 'AdClean'
+$lblLogo.ForeColor = $script:C.accent
+$lblLogo.Font = New-Object System.Drawing.Font('Segoe UI', 14.5, [System.Drawing.FontStyle]::Bold)
+$lblSubTitle = New-Object System.Windows.Forms.Label
+$lblSubTitle.Location = New-Object System.Drawing.Point(136, 22)
+$lblSubTitle.Size = New-Object System.Drawing.Size(300, 22)
+$lblSubTitle.Text = '安卓去广告精简工具'
+$lblSubTitle.ForeColor = $script:C.sub
+# 状态药丸：圆角标签，随状态变色（文本留白保证药丸形状）
 $lblDevice = New-Object System.Windows.Forms.Label
-$lblDevice.Location = New-Object System.Drawing.Point(12, 8)
-$lblDevice.Size = New-Object System.Drawing.Size(640, 22)
-$lblDevice.Text = '设备状态：正在检测 adb 与手机连接…'
-$lblDevice.ForeColor = 'DimGray'
+$lblDevice.Location = New-Object System.Drawing.Point(18, 52)
+$lblDevice.Size = New-Object System.Drawing.Size(560, 28)
+$lblDevice.Text = '  ●  设备状态：正在检测 adb 与手机连接…'
+$lblDevice.ForeColor = $script:C.sub
+$lblDevice.BackColor = $script:C.btn
 $lblBrand = New-Object System.Windows.Forms.Label
-$lblBrand.Location = New-Object System.Drawing.Point(12, 36)
-$lblBrand.Size = New-Object System.Drawing.Size(640, 20)
+$lblBrand.Location = New-Object System.Drawing.Point(20, 84)
+$lblBrand.Size = New-Object System.Drawing.Size(480, 18)
 $lblBrand.Text = ''
-$lblBrand.ForeColor = 'DarkGreen'
+$lblBrand.ForeColor = $script:C.ok
 $btnRefresh = New-Object System.Windows.Forms.Button
 $btnRefresh.Text = '刷新设备'
-$btnRefresh.Location = New-Object System.Drawing.Point(750, 8)
-$btnRefresh.Size = New-Object System.Drawing.Size(96, 28)
-$panelTop.Controls.AddRange(@($lblDevice, $lblBrand, $btnRefresh))
+$btnRefresh.Location = New-Object System.Drawing.Point(744, 12)
+$btnRefresh.Size = New-Object System.Drawing.Size(100, 34)
+$panelTop.Controls.AddRange(@($lblLogo, $lblSubTitle, $lblDevice, $lblBrand, $btnRefresh))
+$btnRefresh.Anchor = 'Top,Right'
 
-# --- 过滤行 ---
-$chkLow = New-Object System.Windows.Forms.CheckBox
-$chkLow.Text = '低风险'; $chkLow.Checked = $true;  $chkLow.Location = New-Object System.Drawing.Point(740, 40); $chkLow.Size = New-Object System.Drawing.Size(70, 20)
-$chkMed = New-Object System.Windows.Forms.CheckBox
-$chkMed.Text = '中风险'; $chkMed.Checked = $true;  $chkMed.Location = New-Object System.Drawing.Point(806, 40); $chkMed.Size = New-Object System.Drawing.Size(70, 20)
-$chkHigh = New-Object System.Windows.Forms.CheckBox
-$chkHigh.Text = '高风险'; $chkHigh.Checked = $false; $chkHigh.Location = New-Object System.Drawing.Point(740, 60); $chkHigh.Size = New-Object System.Drawing.Size(70, 20)
-$panelTop.Controls.AddRange(@($chkLow, $chkMed, $chkHigh))
+# --- 筛选芯片行（药丸开关，替代复选框） ---
+$chipLow  = New-Object System.Windows.Forms.Button
+$chipLow.Name = 'low';  $chipLow.Text = '● 低风险';  $chipLow.Location = New-Object System.Drawing.Point(588, 66); $chipLow.Size = New-Object System.Drawing.Size(84, 28)
+$chipMed  = New-Object System.Windows.Forms.Button
+$chipMed.Name = 'medium'; $chipMed.Text = '● 中风险'; $chipMed.Location = New-Object System.Drawing.Point(676, 66); $chipMed.Size = New-Object System.Drawing.Size(84, 28)
+$chipHigh = New-Object System.Windows.Forms.Button
+$chipHigh.Name = 'high'; $chipHigh.Text = '● 高风险'; $chipHigh.Location = New-Object System.Drawing.Point(764, 66); $chipHigh.Size = New-Object System.Drawing.Size(84, 28)
+foreach ($chip in @($chipLow, $chipMed, $chipHigh)) {
+    $chip.FlatStyle = 'Flat'; $chip.Cursor = 'Hand'
+    $chip.FlatAppearance.BorderSize = 0
+    $chip.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 8.5)
+    $chip.Add_Click({
+        $n = $this.Name
+        $script:ChipOn[$n] = -not $script:ChipOn[$n]
+        Update-ChipStyle $this
+        Refresh-List
+    })
+    $panelTop.Controls.Add($chip)
+}
+$chipLow.Anchor = 'Top,Right'; $chipMed.Anchor = 'Top,Right'; $chipHigh.Anchor = 'Top,Right'
+Update-ChipStyle $chipLow; Update-ChipStyle $chipMed; Update-ChipStyle $chipHigh
+Set-Rounded $chipLow 14; Set-Rounded $chipMed 14; Set-Rounded $chipHigh 14
+Set-Rounded $btnRefresh 8
+$btnRefresh.FlatStyle = 'Flat'; $btnRefresh.Cursor = 'Hand'
+$btnRefresh.BackColor = $script:C.btn; $btnRefresh.ForeColor = $script:C.text
+$btnRefresh.FlatAppearance.BorderSize = 1
+$btnRefresh.FlatAppearance.BorderColor = $script:C.line
+$btnRefresh.FlatAppearance.MouseOverBackColor = $script:C.btnH
+$sepTop = New-Object System.Windows.Forms.Panel
+$sepTop.Dock = 'Bottom'; $sepTop.Height = 1; $sepTop.BackColor = $script:C.line
+$panelTop.Controls.Add($sepTop)
 
 # --- 中部：组件列表 ---
 $lv = New-Object System.Windows.Forms.ListView
-$lv.View = 'Details'; $lv.CheckBoxes = $true; $lv.FullRowSelect = $true; $lv.GridLines = $true
+$lv.View = 'Details'; $lv.CheckBoxes = $true; $lv.FullRowSelect = $true
 $lv.Dock = 'Fill'
-[void]$lv.Columns.Add('组件', 130)
-[void]$lv.Columns.Add('包名', 240)
-[void]$lv.Columns.Add('风险', 50)
-[void]$lv.Columns.Add('状态', 70)
+$lv.BackColor = $script:C.surface
+$lv.ForeColor = $script:C.text
+$lv.BorderStyle = 'None'
+$lv.OwnerDraw = $true
+[void]$lv.Columns.Add('  组件', 140)
+[void]$lv.Columns.Add('包名', 250)
+[void]$lv.Columns.Add('风险', 60)
+[void]$lv.Columns.Add('状态', 80)
 [void]$lv.Columns.Add('说明', 300)
+# 自绘深色表头
+$lv.add_DrawColumnHeader({
+    param($s, $e)
+    $b = New-Object System.Drawing.SolidBrush $script:C.surface
+    $s.Graphics.FillRectangle($b, $e.Bounds)
+    $sf = New-Object System.Drawing.StringFormat
+    $sf.LineAlignment = [System.Drawing.StringAlignment]::Center
+    $tl = $e.Bounds; $tl.Y += 2
+    $tb = New-Object System.Drawing.SolidBrush $script:C.dim
+    $s.Graphics.DrawString($e.Header.Text, $s.Font, $tb, $tl, $sf)
+    $b.Dispose(); $tb.Dispose(); $sf.Dispose()
+})
+$lv.add_DrawSubItem({ param($s, $e) $e.DrawDefault = $true })
+$lv.add_SizeChanged({ param($s, $e) Set-Rounded $s 12 })
 
 # --- 底部：按钮 + 日志 ---
 $panelBottom = New-Object System.Windows.Forms.Panel
-$panelBottom.Dock = 'Bottom'; $panelBottom.Height = 205
+$panelBottom.Dock = 'Bottom'; $panelBottom.Height = 212
+$panelBottom.BackColor = $script:C.bg
+$panelBottom.Padding = New-Object System.Windows.Forms.Padding(0, 6, 0, 0)
 $flow = New-Object System.Windows.Forms.FlowLayoutPanel
-$flow.Dock = 'Top'; $flow.Height = 40
-function New-Btn([string]$text) {
+$flow.Dock = 'Top'; $flow.Height = 54
+$flow.BackColor = $script:C.bg
+$flow.Padding = New-Object System.Windows.Forms.Padding(4, 0, 0, 0)
+function New-Btn([string]$text, [bool]$primary = $false) {
     $b = New-Object System.Windows.Forms.Button
-    $b.Text = $text; $b.Size = New-Object System.Drawing.Size(128, 30)
-    $b.Margin = New-Object System.Windows.Forms.Padding(4)
+    $b.Text = $text; $b.Size = New-Object System.Drawing.Size(136, 36)
+    $b.Margin = New-Object System.Windows.Forms.Padding(6, 4, 6, 8)
+    $b.FlatStyle = 'Flat'; $b.Cursor = 'Hand'
+    $b.ForeColor = $script:C.text
+    $b.FlatAppearance.BorderSize = 1
+    $b.FlatAppearance.BorderColor = $script:C.line
+    $b.FlatAppearance.MouseOverBackColor = $script:C.btnH
+    $b.FlatAppearance.MouseDownBackColor = $script:C.accentH
+    $b.BackColor = $script:C.btn
+    $b.Add_SizeChanged({ param($s, $e) Set-Rounded $s 8 })
+    if ($primary) {
+        $b.BackColor = $script:C.accent
+        $b.ForeColor = [System.Drawing.Color]::White
+        $b.FlatAppearance.BorderSize = 0
+        $b.FlatAppearance.MouseOverBackColor = $script:C.accentH
+        $b.FlatAppearance.MouseDownBackColor = $script:C.accentH
+    }
     return $b
 }
 $btnScan    = New-Btn '扫描组件状态'
-$btnOneKey  = New-Btn '一键优化(推荐)'
+$btnOneKey  = New-Btn '一键优化(推荐)' $true
 $btnFreeze  = New-Btn '冻结选中项'
 $btnRestore = New-Btn '还原选中项'
 $btnRestoreAll = New-Btn '还原全部(按记录)'
 $btnSettings   = New-Btn '应用系统优化'
 $flow.Controls.AddRange(@($btnScan, $btnOneKey, $btnFreeze, $btnRestore, $btnRestoreAll, $btnSettings))
-$log = New-Object System.Windows.Forms.TextBox
+$log = New-Object System.Windows.Forms.RichTextBox
 $log.Multiline = $true; $log.ReadOnly = $true; $log.ScrollBars = 'Vertical'
-$log.Dock = 'Fill'; $log.BackColor = [System.Drawing.Color]::White
+$log.Dock = 'Fill'
+$log.BorderStyle = 'None'
+$log.BackColor = $script:C.input
+$log.ForeColor = $script:C.sub
+$log.add_SizeChanged({ param($s, $e) Set-Rounded $s 10 })
 $panelBottom.Controls.Add($log)
 $panelBottom.Controls.Add($flow)
 
+$f.Padding = New-Object System.Windows.Forms.Padding(10, 8, 10, 8)
+$f.BackColor = $script:C.bg
 $f.Controls.Add($lv)
 $f.Controls.Add($panelTop)
 $f.Controls.Add($panelBottom)
 
 function Add-Log([string]$msg) {
-    $log.AppendText("[$(Get-Date -Format 'HH:mm:ss')] $msg`r`n")
-    $log.SelectionStart = $log.TextLength; $log.ScrollToCaret()
+    $c = $script:C.text
+    if ($msg -match '\[(冻结|还原)')      { $c = $script:C.ok }
+    elseif ($msg -match '\[(失败|拒绝|X)\]') { $c = $script:C.bad }
+    elseif ($msg -match '\[(跳过|设置)\]')  { $c = $script:C.warn }
+    $log.SelectionStart = $log.TextLength; $log.SelectionLength = 0
+    $log.SelectionColor = $script:C.faint
+    $log.SelectedText = "[$(Get-Date -Format 'HH:mm:ss')] "
+    $log.SelectionColor = $c
+    $log.SelectedText = $msg + "`r`n"
+    $log.ScrollToCaret()
 }
 
 function Get-CurrentItems {
-    $risks = @(); if ($chkLow.Checked) { $risks += 'low' }
-    if ($chkMed.Checked) { $risks += 'medium' }; if ($chkHigh.Checked) { $risks += 'high' }
+    $risks = @()
+    if ($script:ChipOn['low'])    { $risks += 'low' }
+    if ($script:ChipOn['medium']) { $risks += 'medium' }
+    if ($script:ChipOn['high'])   { $risks += 'high' }
     Get-MergedItems $script:Brand | Where-Object { $risks -contains $_.risk }
 }
 
@@ -299,30 +527,40 @@ function Refresh-List {
     foreach ($i in (Get-CurrentItems)) {
         $state = Get-PkgState $i.pkg
         $row = New-Object System.Windows.Forms.ListViewItem($i.name)
+        $row.UseItemStyleForSubItems = $false
         [void]$row.SubItems.Add($i.pkg)
         [void]$row.SubItems.Add($(switch ($i.risk) { 'low' {'低'} 'medium' {'中'} default {'高'} }))
         [void]$row.SubItems.Add($(switch ($state) { 'active' {'运行中'} 'disabled' {'已冻结'} default {'不存在'} }))
         [void]$row.SubItems.Add($i.desc)
+        $row.SubItems[2].ForeColor = $(switch ($i.risk) {
+            'low'    { $script:C.ok }
+            'medium' { $script:C.warn }
+            default  { $script:C.bad }
+        })
+        $row.SubItems[3].ForeColor = $(switch ($state) {
+            'active'   { $script:C.ok }
+            'disabled' { $script:C.dim }
+            default    { $script:C.ghost }
+        })
+        if ($state -eq 'disabled') { $row.ForeColor = $script:C.dim }
+        if ($state -eq 'absent')   { $row.ForeColor = $script:C.ghost }
         $row.Tag = @{ pkg = $i.pkg; risk = $i.risk }
         $row.Checked = ($i.risk -eq 'low')
-        if ($state -eq 'disabled') { $row.ForeColor = [System.Drawing.Color]::Gray }
-        if ($state -eq 'absent')   { $row.ForeColor = [System.Drawing.Color]::LightGray }
         [void]$lv.Items.Add($row)
     }
     $lv.EndUpdate()
 }
 
 function Connect-Device {
+    if (-not $script:Adb) {
+        if (-not (Update-AdbSetup)) { $lv.Items.Clear(); return }
+    }
     $serial = Get-DeviceConnected
     if ($serial -eq $script:Serial) { return }
     if (-not $serial) {
         $script:Serial = $null; $script:Brand = $null
-        if (-not $script:Adb) {
-            $lblDevice.Text = '设备状态：未找到 adb。请将 platform-tools 放到程序目录，或安装 adb 并加入 PATH'
-        } else {
-            $lblDevice.Text = '设备状态：未检测到手机，请连接 USB 并允许调试'
-        }
-        $lblDevice.ForeColor = 'Firebrick'; $lblBrand.Text = ''
+        Set-StatusPill '设备状态：adb 已就绪，未检测到手机，请连接 USB 并允许调试' $script:C.bad
+        $lblBrand.Text = ''
         $lv.Items.Clear(); return
     }
     $script:Serial = $serial
@@ -331,8 +569,7 @@ function Connect-Device {
     $device  = [string](Invoke-Adb 'shell' 'getprop ro.product.device')
     $android = [string](Invoke-Adb 'shell' 'getprop ro.build.version.release')
     $shown = if ($model.Trim()) { $model.Trim() } else { $device.Trim() }
-    $lblDevice.Text = "设备状态：已连接 $shown (Android $android) 序列号 $serial"
-    $lblDevice.ForeColor = 'DarkGreen'
+    Set-StatusPill "设备状态：已连接 $shown (Android $android) 序列号 $serial" $script:C.ok
     $lblBrand.Text = "识别系统：$script:Brand" + $(if ($script:Brand -eq 'Unknown') { ' —— 未识别品牌，仅显示自定义清单' } else { '' })
     Add-Log "已连接设备：$shown ($serial)，系统识别为 $script:Brand"
     $st = Load-State $serial
@@ -342,7 +579,6 @@ function Connect-Device {
 
 # ---------------- 按钮 ----------------
 $btnRefresh.Add_Click({ Connect-Device })
-$chkLow.Add_Click({ Refresh-List }); $chkMed.Add_Click({ Refresh-List }); $chkHigh.Add_Click({ Refresh-List })
 
 $btnScan.Add_Click({
     if (-not $script:Serial) { Add-Log '[X] 未连接设备'; return }
@@ -437,7 +673,7 @@ $btnSettings.Add_Click({
     Add-Log '系统开关优化完成'
 })
 
-$f.Add_Shown({ Add-Log 'AdClean 已启动。连接手机后点击「刷新设备」即可开始。' })
+$f.Add_Shown({ Add-Log 'AdClean 已启动。未检测到 adb 时会自动下载 platform-tools；连接手机后自动识别品牌。' })
 
 # 设备轮询定时器
 $timer = New-Object System.Windows.Forms.Timer

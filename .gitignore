@@ -2,5 +2,8 @@
 dist/AdCleanGUI.ps1
 dist/custom-list.json
 dist/crash-log.txt
-# 设备冻结记录（含序列号，不入库）
+dist/brands.json
+# 运行时数据（含序列号与下载的 adb，不入库）
 state/
+dist/state/
+dist/platform-tools/

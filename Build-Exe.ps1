@@ -29,9 +29,16 @@ if ($ps1 -notmatch '-SelfTest' -or $ps1 -notmatch 'AdClean') { Write-Error '主�
 $b64Ps1 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($ps1))
 $b64Cfg = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('[]'))
 
+# 3.1) 读品牌配置 brands.json（必需，内嵌供 exe 首次运行释放）
+$brandsPath = Join-Path $Dir 'brands.json'
+if (-not (Test-Path $brandsPath)) { Write-Error '缺少 brands.json（必需的配置文件）'; exit 1 }
+$brandsJson = [IO.File]::ReadAllText($brandsPath)  # ReadAllText 自动去 BOM
+if ($brandsJson -notmatch '"brands"') { Write-Error 'brands.json 内容异常（缺少 brands 字段）'; exit 1 }
+$b64Brands = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($brandsJson))
+
 # 4) 填充源码占位符
 $src = [IO.File]::ReadAllText($Src)
-$src = $src.Replace('__PS1_B64__', $b64Ps1).Replace('__PS2_B64__', $b64Cfg)
+$src = $src.Replace('__PS1_B64__', $b64Ps1).Replace('__PS2_B64__', $b64Cfg).Replace('__PS3_B64__', $b64Brands)
 $gen = Join-Path $env:TEMP "AdClean_gen_$PID.cs"
 [IO.File]::WriteAllText($gen, $src, (New-Object Text.UTF8Encoding $true))
 

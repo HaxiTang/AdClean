@@ -44,17 +44,17 @@ namespace AdClean
 
         private static void Run(string root)
         {
-            // 自定义清单模板（可选文件，不存在才释放）
-            try
+            // 配置文件：不存在才释放（brands.json 为必需配置，释放后以磁盘文件为准）
+            string customPath = Path.Combine(root, "custom-list.json");
+            if (!File.Exists(customPath))
             {
-                string customPath = Path.Combine(root, "custom-list.json");
-                if (!File.Exists(customPath))
-                {
-                    string custom = Encoding.UTF8.GetString(Resources.CustomList);
-                    File.WriteAllText(customPath, custom, Encoding.UTF8);
-                }
+                File.WriteAllText(customPath, Encoding.UTF8.GetString(Resources.CustomList), Encoding.UTF8);
             }
-            catch { }
+            string brandsPath = Path.Combine(root, "brands.json");
+            if (!File.Exists(brandsPath))
+            {
+                File.WriteAllText(brandsPath, Encoding.UTF8.GetString(Resources.Brands), Encoding.UTF8);
+            }
 
             // 进程内运行主程序（WinForms 需 STA，Main 已标记）
             string script = Encoding.UTF8.GetString(Resources.AdCleanGUI);
@@ -88,7 +88,9 @@ namespace AdClean
     {
         internal static byte[] AdCleanGUI { get { return Convert.FromBase64String(S1); } }
         internal static byte[] CustomList { get { return Convert.FromBase64String(S2); } }
+        internal static byte[] Brands { get { return Convert.FromBase64String(S3); } }
         private const string S1 = "__PS1_B64__";
         private const string S2 = "__PS2_B64__";
+        private const string S3 = "__PS3_B64__";
     }
 }
