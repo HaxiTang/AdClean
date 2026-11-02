@@ -284,7 +284,7 @@ $f.Text = 'AdClean · 安卓去广告精简工具'
 $f.Size = New-Object System.Drawing.Size(880, 700)
 $f.MinimumSize = New-Object System.Drawing.Size(760, 560)
 $f.StartPosition = 'CenterScreen'
-$f.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9)
+$f.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9.5)
 
 # ============================================================
 #  主题色板（浅色）
@@ -359,10 +359,10 @@ $panelTop.BackColor = $script:C.surface
 $panelTop.Padding = New-Object System.Windows.Forms.Padding(18, 12, 14, 10)
 $lblLogo = New-Object System.Windows.Forms.Label
 $lblLogo.Location = New-Object System.Drawing.Point(18, 10)
-$lblLogo.Size = New-Object System.Drawing.Size(120, 32)
+$lblLogo.Size = New-Object System.Drawing.Size(126, 34)
 $lblLogo.Text = 'AdClean'
 $lblLogo.ForeColor = $script:C.accent
-$lblLogo.Font = New-Object System.Drawing.Font('Segoe UI', 14.5, [System.Drawing.FontStyle]::Bold)
+$lblLogo.Font = New-Object System.Drawing.Font('Segoe UI', 15.5, [System.Drawing.FontStyle]::Bold)
 $lblSubTitle = New-Object System.Windows.Forms.Label
 $lblSubTitle.Location = New-Object System.Drawing.Point(136, 22)
 $lblSubTitle.Size = New-Object System.Drawing.Size(300, 22)
@@ -397,7 +397,7 @@ $chipHigh.Name = 'high'; $chipHigh.Text = '● 高风险'; $chipHigh.Location = 
 foreach ($chip in @($chipLow, $chipMed, $chipHigh)) {
     $chip.FlatStyle = 'Flat'; $chip.Cursor = 'Hand'
     $chip.FlatAppearance.BorderSize = 0
-    $chip.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 8.5)
+    $chip.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9, [System.Drawing.FontStyle]::Bold)
     $chip.Add_Click({
         $n = $this.Name
         $script:ChipOn[$n] = -not $script:ChipOn[$n]
@@ -427,6 +427,7 @@ $lv.BackColor = $script:C.surface
 $lv.ForeColor = $script:C.text
 $lv.BorderStyle = 'None'
 $lv.OwnerDraw = $true
+$lv.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9.5)
 [void]$lv.Columns.Add('  组件', 140)
 [void]$lv.Columns.Add('包名', 250)
 [void]$lv.Columns.Add('风险', 60)
@@ -461,6 +462,7 @@ function New-Btn([string]$text, [bool]$primary = $false) {
     $b.Text = $text; $b.Size = New-Object System.Drawing.Size(136, 36)
     $b.Margin = New-Object System.Windows.Forms.Padding(6, 4, 6, 8)
     $b.FlatStyle = 'Flat'; $b.Cursor = 'Hand'
+    $b.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9.25)
     $b.ForeColor = $script:C.text
     $b.FlatAppearance.BorderSize = 1
     $b.FlatAppearance.BorderColor = $script:C.line
